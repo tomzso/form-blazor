@@ -1,0 +1,159 @@
+﻿
+
+/* MAIN FORM CONTAINER */
+.form-container {
+    max-width: 800px;
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    padding: 20px;
+    margin: 40px 15px;
+    width: 80vw;
+}
+
+    /* TITLE + DESCRIPTION */
+    .form-container h1 {
+        text-align: center;
+        margin-bottom: 10px;
+        font-size: 2rem;
+    }
+
+    .form-container p {
+        text-align: center;
+        margin-bottom: 20px;
+        font-size: 1rem;
+        color: #555;
+    }
+
+.form-title {
+    font-size: 3.5rem;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+}
+
+.form-description {
+    font-size: 2.0rem;
+    margin-bottom: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+.form-head {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* FORM FIELD STYLING */
+.form-field {
+    margin-bottom: 25px;
+    padding: 30px 50px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+    .form-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .form-field input[type="text"],
+    .form-field input[type="checkbox"],
+    .form-field input[type="radio"],
+    .form-control {
+        margin-top: 6px;
+    }
+
+/* RADIO + CHECKBOX ROWS */
+.choice-row {
+    display: flex;
+    align-items: center; /* vertical alignment */
+    gap: 6px; /* space between checkbox/radio and label */
+    margin: 4px 0;
+}
+
+    .choice-row label {
+        position: relative;
+        top: 6px; /* adjust if label looks slightly misaligned */
+    }
+
+/* TEXTBOX CONTROL */
+.form-control {
+    width: 100%;
+    max-width: 50px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* IMAGE PREVIEW */
+.image-container {
+    display: flex;
+    justify-content: center; /* centers horizontally */
+    margin-bottom: 12px;
+}
+
+    .image-container img {
+        max-width: 150px; /* maximum width */
+        max-height: 200px; /* maximum height */
+        width: auto; /* maintain aspect ratio */
+        height: auto; /* maintain aspect ratio */
+        height: auto;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+/* SUBMIT BUTTON */
+button[type="submit"],
+.btn.btn-primary {
+    padding: 12px 24px;
+    font-size: 1rem;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    align-self: flex-end;
+    margin-top: 20px;
+}
+
+    button[type="submit"]:hover,
+    .btn.btn-primary:hover {
+        background-color: #0056b3;
+    }
+
+    button[type="submit"]:disabled,
+    .btn.btn-primary:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+
+/* RESPONSIVE DESIGN */
+@media (min-width: 1200px) {
+    .form-container {
+        max-width: 800px;
+        margin: 80px auto 120px auto;
+        padding: 40px;
+    }
+
+        .form-container h1 {
+            font-size: 1.6rem;
+        }
+
+    .form-control {
+        max-width: 100%;
+    }
+
+    button[type="submit"] {
+        width: 100%;
+    }
+
+    .image-container img {
+        max-width: 400px; /* maximum width */
+        max-height: 300px; /* maximum height */
+    }
+}

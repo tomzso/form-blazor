@@ -1,0 +1,29 @@
+﻿<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">BlazorApp4</a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> <i class="fa-solid fa-house"></i> Home
+            </NavLink>
+        </div>
+
+
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="auth">
+                <span class="oi oi-list-rich" aria-hidden="true"></span> <i class="fa-solid fa-arrow-right-to-bracket"></i> Auth
+            </NavLink>
+
+        </div>
+
+        
+    </nav>
+</div>
+

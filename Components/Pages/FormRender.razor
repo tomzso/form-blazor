@@ -1,0 +1,234 @@
+﻿@page "/form/{Url}"
+@inject BlazorApp4.Services.FormService FormService
+@rendermode InteractiveServer
+
+
+@if (form == null)
+{
+ 
+}
+else
+{
+    <div class="form-container">
+        <div form-head>
+            <div class="form-title">@form.Title</div>
+            <div class="form-description">@form.Description</div>
+        </div>
+
+
+        <EditForm Model="form" OnValidSubmit="HandleSubmit" FormName="@form.Url">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            @foreach (var field in form.FormFields.OrderBy(f => f.Order))
+            {
+                <div class="form-field mb-3">
+                    <h3><strong>@field.Label</strong></h3>
+
+                    @if (!string.IsNullOrWhiteSpace(field.ImageUrl))
+                    {
+                        <div class="image-container">
+                            <img src="@field.ImageUrl" alt="Question image" style="max-width:300px;" />
+                        </div>
+                    }
+
+                    @switch (field.FieldType.ToLower())
+                    {
+                        // RADIO BUTTONS
+                        case "radiobox":
+                            <InputRadioGroup @bind-Value="field.RadioResponse" Name="@($"field_{field.Id}")">
+                                @foreach (var option in field.Options.OrderBy(o => o.Order))
+                                {
+                                    <div class="choice-row">
+                                        <InputRadio Value="@option.OptionValue" disabled="@HasResponse(field)" />
+                                        <label>@option.OptionValue</label>
+                                    </div>
+                                }
+                            </InputRadioGroup>
+                            break;
+
+                        // CHECKBOXES
+                        case "checkbox":
+                            <div>
+                                @foreach (var option in field.Options.OrderBy(o => o.Order))
+                                {
+                                    <div class="choice-row">
+                                        <input type="checkbox"
+                                               checked="@field.CheckboxResponse.Contains(option.OptionValue)"
+                                               @onchange="e => OnCheckboxChanged(field, option, e)"
+                                               disabled="@HasResponse(field)" />
+                                        <label>@option.OptionValue</label>
+                                    </div>
+                                }
+                            </div>
+                            break;
+
+
+                        // TEXTBOX
+                        case "textbox":
+                            <div>
+                                <InputText @bind-Value="field.TextResponse"
+                                           class="form-control"
+                                           @key="field.Id"
+                                           disabled="@HasResponse(field)" />
+                                
+                            </div>
+                            break;
+
+                        default:
+                            <p>Unsupported field type: @field.FieldType</p>
+                            break;
+                    }
+                </div>
+            }
+
+            <button type="submit" class="btn btn-primary" disabled="@IsFormAnswered">Submit</button>
+        </EditForm>
+    </div>
+}
+
+<h3>@message</h3>
+
+@code {
+    [Parameter]
+    public string Url { get; set; }
+
+    private BlazorApp4.Models.FormModel form;
+
+    private bool IsFormAnswered = false;
+
+    public string message { get; set; } = "";
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Load the form by URL
+        form = await FormService.GetFormByUrlAsync(Url);
+        try
+        {
+            if (form == null)
+            {
+                message = "Form not found.";
+                return;
+            }
+
+            // Optional: load existing response if user has one
+            var existingResponse = await FormService.GetUserFormResponseAsync(form.Id);
+
+            IsFormAnswered = (existingResponse != null);
+
+            if (existingResponse != null && existingResponse.FieldResponses != null)
+            {
+                foreach (var field in form.FormFields)
+                {
+                    var responses = existingResponse.FieldResponses
+                        .Where(r => r.FieldId == field.Id)
+                        .Select(r => r.Value)
+                        .ToList();
+
+                    switch (field.FieldType.ToLower())
+                    {
+                        case "radiobox":
+                            field.RadioResponse = responses.FirstOrDefault();
+                            break;
+
+                        case "checkbox":
+                            field.CheckboxResponse = responses;
+                            break;
+
+                        case "textbox":
+                            field.TextResponse = responses.FirstOrDefault();
+                            break;
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            IsFormAnswered = false;
+        }
+    }
+
+
+
+    private void OnCheckboxChanged(BlazorApp4.Models.FormFieldModel field, BlazorApp4.Models.FormFieldOptionModel option, ChangeEventArgs e)
+    {
+        bool isChecked = e.Value is bool b && b;
+
+        // Some browsers may return "on" instead of true/false
+        if (!isChecked && e.Value is string s)
+        {
+            isChecked = s == "on";
+        }
+
+        if (isChecked && !field.CheckboxResponse.Contains(option.OptionValue))
+        {
+            field.CheckboxResponse.Add(option.OptionValue);
+        }
+        else if (!isChecked && field.CheckboxResponse.Contains(option.OptionValue))
+        {
+            field.CheckboxResponse.Remove(option.OptionValue);
+        }
+    }
+
+
+    private async Task HandleSubmit()
+    {
+
+
+        // Step 1: Create a response session
+        var responseId = await FormService.CreateFormResponseAsync(form.Id);
+        if (responseId == null)
+        {
+            message = "Failed to start response.";
+            return;
+        }
+
+        // Step 2: Loop through fields and save answers
+        foreach (var field in form.FormFields)
+        {
+            switch (field.FieldType.ToLower())
+            {
+                case "radiobox":
+                    if (!string.IsNullOrEmpty(field.RadioResponse))
+                    {
+                        await FormService.CreateFormUserAnswerAsync(responseId.Value, field.Id, field.RadioResponse);
+                    }
+                    break;
+
+                case "checkbox":
+                    foreach (var val in field.CheckboxResponse)
+                    {
+                        await FormService.CreateFormUserAnswerAsync(responseId.Value, field.Id, val);
+                    }
+                    break;
+
+                case "textbox":
+                    if (!string.IsNullOrEmpty(field.TextResponse))
+                    {
+                        await FormService.CreateFormUserAnswerAsync(responseId.Value, field.Id, field.TextResponse);
+                    }
+                    break;
+            }
+        }
+    }
+    private bool HasResponse(BlazorApp4.Models.FormFieldModel field)
+    {
+        switch (field.FieldType.ToLower())
+        {
+            case "radiobox":
+                return !string.IsNullOrEmpty(field.RadioResponse) && IsFormAnswered;
+
+            case "checkbox":
+                return field.CheckboxResponse != null && field.CheckboxResponse.Any() && IsFormAnswered;
+
+            case "textbox":
+                return !string.IsNullOrEmpty(field.TextResponse) && IsFormAnswered;
+
+            default:
+                return false;
+        }
+    }
+
+}

@@ -1,0 +1,34 @@
+﻿<div class="notification @Type @(!Visible ? "" : "show")">
+    @Message
+    <div class="notification-progress @Type" style="width:@Progress%"></div>
+</div>
+
+@code {
+    [Parameter] public string Message { get; set; } = "";
+    [Parameter] public string Type { get; set; } = "success"; // success | error
+    [Parameter] public int Duration { get; set; } = 1500; // milliseconds
+
+    private bool Visible { get; set; } = false;
+    private int Progress { get; set; } = 0;
+
+    public async Task ShowAsync(string message, string type = "success")
+    {
+        Message = message;
+        Type = type;
+        Visible = true;
+
+        int interval = 20; // 20ms per frame
+        var steps = Duration / interval;
+        if (steps < 1) steps = 1; // ensure at least one step
+        for (int i = 0; i <= steps; i++)
+        {
+            Progress = 100 - (int)((i / (double)steps) * 100);
+            StateHasChanged();
+            await Task.Delay(interval);
+        }
+
+        Visible = false;
+        Progress = 0;
+        StateHasChanged();
+    }
+}

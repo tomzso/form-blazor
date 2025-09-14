@@ -1,0 +1,156 @@
+﻿@page "/auth"
+@using BlazorApp4.Components.Common
+@inject BlazorApp4.Services.AuthService AuthService
+@inject BlazorApp4.Services.ContextService ContextData
+<Notification @ref="notification" />
+@rendermode InteractiveServer
+
+<div class="auth-container">
+
+    <div>
+        @if (isLoginMode)
+        {
+            <h1>Login</h1>
+            <div class="title-underline"></div>
+            <label><i class="fa-solid fa-user auth-icon-gap"></i>Username:</label>
+            <input @bind="loginModel.Username" />
+
+            <label><i class="fa-solid fa-lock auth-icon-gap"></i>Password:</label>
+            <input type="password" @bind="loginModel.Password" @onkeydown="HandleLoginEnter" />
+
+            <br />
+            <div class="button-group">
+                <button class="register-active" @onclick="SwitchToRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right auth-icon-gap"></i>Sign Up</button>
+                <button @onclick="DoLogin" disabled="@isButtonDisabled"><i class="fa-solid fa-chevron-right auth-icon-gap"></i>Next</button>
+            </div>
+        }
+        else
+        {
+            <h1>Sign Up</h1>
+            <div class="title-underline"></div>
+            <label><i class="fa-solid fa-user auth-icon-gap"></i>Username:</label>
+            <input @bind="registerModel.Username" />
+
+            <label><i class="fa-solid fa-envelope auth-icon-gap"></i>Email:</label>
+            <input @bind="registerModel.Email" />
+
+            <label><i class="fa-solid fa-lock auth-icon-gap"></i>Password:</label>
+            <input type="password" @bind="registerModel.Password" @onkeydown="HandleRegisterEnter" />
+
+            <br />
+            <div class="button-group">
+                <button class="login-active" @onclick="SwitchToLogin" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right-to-bracket auth-icon-gap"></i>Login</button>
+                <button @onclick="DoRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-chevron-right auth-icon-gap"></i>Next</button>
+            </div>
+        }
+    </div>
+
+</div>
+
+
+@code {
+    private Notification notification;
+
+    private bool isLoginMode = true;
+    private string apiResponse = "";
+
+    private bool isButtonDisabled = false;
+    private readonly int disableDuration = 2000; // in milliseconds
+
+    private BlazorApp4.Models.LoginModel loginModel = new();
+    private BlazorApp4.Models.RegisterModel registerModel = new();
+
+    private void SwitchToRegister()
+    {
+        isLoginMode = false;
+    }
+
+    private void SwitchToLogin()
+    {
+        isLoginMode = true;
+    }
+
+    private async Task DoLogin()
+    {
+        // Disable immediately
+        isButtonDisabled = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthService.Login(loginModel);
+            apiResponse = result.Message;
+
+            if (result.Success)
+            {
+                await notification.ShowAsync("Login Successful!", "success");
+            }
+            else
+            {
+                await notification.ShowAsync($"{apiResponse}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+            await notification.ShowAsync($"{apiResponse}", "error");
+        }
+        finally
+        {
+            // Wait and then re-enable
+            isButtonDisabled = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task DoRegister()
+    {
+        // Disable immediately
+        isButtonDisabled = true;
+        StateHasChanged();
+
+        try
+        {
+            var result = await AuthService.Register(registerModel);
+            apiResponse = result.Message;
+
+            if (result.Success)
+            {
+                await notification.ShowAsync("Registration Successful!", "success");
+            }
+            else
+            {
+                await notification.ShowAsync($"{apiResponse}", "error");
+            }
+        }
+        catch (Exception ex)
+        {
+            apiResponse = $"Error: {ex.Message}";
+            await notification.ShowAsync($" {apiResponse}", "error");
+        }
+        finally
+        {
+            // Wait and then re-enable
+            isButtonDisabled = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleLoginEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isButtonDisabled)
+        {
+            await DoLogin();
+        }
+    }
+
+    private async Task HandleRegisterEnter(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !isButtonDisabled)
+        {
+            await DoRegister();
+        }
+    }
+
+
+}

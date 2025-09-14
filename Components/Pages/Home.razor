@@ -1,0 +1,75 @@
+﻿@page "/"
+
+@inject BlazorApp4.Services.FormService FormService
+@inject BlazorApp4.Services.ContextService ContextData
+@inject NavigationManager Navigation
+@rendermode InteractiveServer
+
+
+@if (forms == null)
+{
+}
+else
+{
+    <div class="form-grid">
+        @foreach (var form in forms)
+        {
+            <div class="form-card">
+                <h1>@form.Title</h1>
+                <h3>@form.Description</h3>
+
+                <p><strong>Type:</strong> @form.Type</p>
+                <p><strong>Created At:</strong> @form.CreatedAt</p>
+                <p><strong>URL:</strong><a href="form/@form.Url">@form.Url</a></p>
+                <p><strong>User ID:</strong> @form.UserId</p>
+                <div class="form-actions">
+                    <button class="btn edit-btn" @onclick="() => EditForm(form.Id)"><i class="fa-solid fa-pen form-render-icon-gap"></i>Edit</button>
+                    <button class="btn stats-btn" @onclick="() => ViewStats(form.Url)"><i class="fa-solid fa-chart-pie form-render-icon-gap"></i>Statistics</button>
+                    <button class="btn delete-btn" @onclick="() => DeleteForm(form.Id)"><i class="fa-solid fa-xmark form-render-icon-gap"></i>Delete</button>
+                </div>
+            </div>
+
+        }
+    </div>
+}
+<h1>@message</h1>
+
+@code {
+    private List<BlazorApp4.Models.FormModel> forms;
+
+    private string message = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        forms = await FormService.GetFormsAsync();
+    }
+    private void EditForm(int id)
+    {
+        //NavigationManager.NavigateTo($"/forms/edit/{id}");
+    }
+
+    private void ViewStats(string url)
+    {
+        message = "hello";
+        if (!string.IsNullOrEmpty(url))
+        {
+            Navigation.NavigateTo($"/stat/{url}");
+        }
+        StateHasChanged();
+    }
+
+    private void DeleteForm(int id)
+    {
+        // await FormService.DeleteFormAsync(id);
+        // forms = await FormService.GetFormsAsync(); // refresh after delete
+    }
+
+    private void GoToForm(string url)
+    {
+        if (!string.IsNullOrEmpty(url))
+        {
+            Navigation.NavigateTo($"/forms/{url}");
+        }
+    }
+
+}

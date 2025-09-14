@@ -1,0 +1,33 @@
+﻿.survey-title {
+    display: flex;
+    justify-content: center;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+.survey-question {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+    color: #0094ff
+}
+
+.survey-chart {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 30px;
+    width: 100%;
+    height: 100%;
+    margin: auto auto
+}
+
+@media (min-width: 1200px) {
+    .survey-chart {
+        display: flex;
+        justify-content: center;
+        margin-bottom: 30px;
+        width: 600px;
+        height: 400px;
+        margin: auto auto
+    }
+}

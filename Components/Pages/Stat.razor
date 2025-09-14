@@ -1,0 +1,108 @@
+﻿@page "/stat/{Url}"
+@inject BlazorApp4.Services.FormService FormService
+@rendermode InteractiveServer
+
+@using ChartJs.Blazor.BarChart
+@using ChartJs.Blazor.Common
+@using ChartJs.Blazor.Common.Enums
+@using ChartJs.Blazor.Util
+
+
+
+@if (form is not null)
+{
+    <h1 class="survey-title">@form.Title</h1>
+    @foreach (var field in form.FormFields)
+    {
+        <div class="mb-5">
+            <h2 class="survey-question">@field.Label</h2>
+            <div class="survey-chart">
+                 <Chart Config="@GetBarConfig(field)" />
+            </div>
+        </div>
+    }
+}
+else
+{
+
+}
+
+@code {
+    [Parameter]
+    public string Url { get; set; }
+
+    private BlazorApp4.Models.FormModel form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        form = await FormService.GetFormByUrlAsync(Url);
+    }
+
+    private BarConfig GetBarConfig(BlazorApp4.Models.FormFieldModel field)
+    {
+        var config = new BarConfig
+            {
+                Options = new BarOptions
+                {
+                    Responsive = true,
+                    Legend = new Legend
+                    {
+                        Position = Position.Top
+                    },
+                    Title = new OptionsTitle
+                    {
+                        Display = true
+                    },
+                    Scales = new BarScales
+                    {
+                        YAxes = new List<CartesianAxis>
+                {
+                    new LinearCartesianAxis
+                    {
+                        Ticks = new LinearCartesianTicks
+                        {
+                            BeginAtZero = true,
+                            MaxTicksLimit = 5   
+
+                        }
+                    }
+                }
+                    }
+                }
+            };
+
+        var dataset = new BarDataset<int>
+            {
+                Label = "Responses",
+                BackgroundColor = new[]
+                {
+            ColorUtil.ColorHexString(255,99,132),
+            ColorUtil.ColorHexString(54,162,235),
+            ColorUtil.ColorHexString(255,206,86),
+            ColorUtil.ColorHexString(75,192,192),
+            ColorUtil.ColorHexString(153,102,255),
+            ColorUtil.ColorHexString(255,159,64),
+            ColorUtil.ColorHexString(201,203,207),
+            ColorUtil.ColorHexString(0,200,83),
+            ColorUtil.ColorHexString(255,51,153),
+            ColorUtil.ColorHexString(0,0,0)
+        },
+                BorderColor = new[]
+                {
+            ColorUtil.FromDrawingColor(System.Drawing.Color.Black)
+        },
+                BorderWidth = 1
+            };
+
+        foreach (var option in field.Options.Take(10))
+        {
+            config.Data.Labels.Add(option.OptionValue);
+            dataset.Add(option.ResponseCount);
+        }
+
+        config.Data.Datasets.Add(dataset);
+
+        return config;
+    }
+
+}
