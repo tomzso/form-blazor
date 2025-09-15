@@ -20,6 +20,7 @@
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     text-align: center;
     min-width: 200px;
+    animation: fadeInCard 0.6s ease-in-out;
 }
 
     .form-card:hover {
@@ -100,10 +101,24 @@
         background-color: #a71d2a;
     }
 
+
+
 /* Mobile responsiveness */
 @media screen and (min-width: 1200px) {
     .form-grid {
 
         grid-template-columns: repeat(4, 1fr); /* 4 columns */
+    }
+}
+
+@keyframes fadeInCard {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
     }
 }

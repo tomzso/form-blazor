@@ -32,7 +32,6 @@ else
         }
     </div>
 }
-<h1>@message</h1>
 
 @code {
     private List<BlazorApp4.Models.FormModel> forms;
@@ -50,7 +49,6 @@ else
 
     private void ViewStats(string url)
     {
-        message = "hello";
         if (!string.IsNullOrEmpty(url))
         {
             Navigation.NavigateTo($"/stat/{url}");
