@@ -1,0 +1,390 @@
+﻿@using System.ComponentModel.DataAnnotations
+@using BlazorApp4.Models
+@rendermode InteractiveServer
+
+@if (SavedQuestions.Any())
+{
+    <div class="mt-4">
+        <h3>Saved Questions:</h3>
+
+        @foreach (var q in SavedQuestions)
+        {
+            <div class="card mb-3 p-3">
+                <h5>@q.Order. @q.Label</h5>
+                <p><strong>Type:</strong> @q.FieldType</p>
+                <p><strong>Required:</strong> @(q.Required ? "Yes" : "No")</p>
+
+                @if (q.FieldType == "textbox")
+                {
+                    <input type="text" class="form-control" placeholder="Answer here..." disabled />
+                }
+                else if (q.FieldType == "radiobox")
+                {
+                    @foreach (var opt in q.Options)
+                    {
+                        <div>
+                            <input type="radio" disabled />
+                            <span>@opt.OptionValue</span>
+                            @if (opt.IsCorrect)
+                            {
+                                <span class="badge bg-success ms-2">Correct</span>
+                            }
+                        </div>
+                    }
+                }
+                else if (q.FieldType == "checkbox")
+                {
+                    @foreach (var opt in q.Options)
+                    {
+                        <div>
+                            <input type="checkbox" disabled />
+                            <span>@opt.OptionValue</span>
+                            @if (opt.IsCorrect)
+                            {
+                                <span class="badge bg-success ms-2">Correct</span>
+                            }
+                        </div>
+                    }
+                }
+            </div>
+        }
+    </div>
+}
+
+
+
+<div class="question-editor-wrapper">
+    <h3>Add more question below:</h3>
+
+    <div class="question-container-form question-container-builder">
+        <!-- Question input -->
+        <input type="text"
+               placeholder="Type your next question..."
+               class="form-control"
+               @bind="CurrentQuestionText" 
+               @bind:event="oninput" />
+        @if (!string.IsNullOrEmpty(CurrentQuestionText))
+        {
+            <p>Your question: "@CurrentQuestionText"</p>
+        }
+    </div>
+
+    <div class="required-checkbox-container">
+        <label>
+            <input type="checkbox" @bind="IsRequired" />
+            This question is required
+        </label>
+    </div>
+
+    <div class="question-container-form question-container-builder">
+        <!-- Buttons to pick question type -->
+        <div class="button-container">
+            <button @onclick='() => SelectType("radiobox")'>Radio</button>
+            <button @onclick='() => SelectType("checkbox")'>Checkbox</button>
+            <button @onclick='() => SelectType("textbox")'>Textbox</button>
+        </div>
+
+
+        <!-- Textbox type -->
+        @if (SelectedType == "textbox")
+        {
+            <input type="text"
+
+                   placeholder="Enter textbox answer"
+                   class="form-control"
+                   @bind="TextboxAnswer" />
+        }
+
+        <!-- Radiobox type -->
+        @if (SelectedType == "radiobox")
+        {
+            @for (int i = 0; i < RadioLabels.Count; i++)
+            {
+                var idx = i; // capture loop variable safely
+                <div class="input-container-check-radio" @key="idx">
+                    <input type="radio"
+                           name="radio-options"
+                           checked="@(SelectedRadio == idx)"
+                           @onchange="() => SelectRadio(idx)" />
+                    <input type="text"
+                           class="form-control"
+                           placeholder=@($"Option {idx + 1}")
+                           value="@RadioLabels[idx]"
+                           @onchange="(ChangeEventArgs e) => RadioLabels[idx] = e.Value?.ToString() ?? string.Empty" />
+                </div>
+            }
+
+            <div>
+                <button class="btn btn-sm btn-success" @onclick="AddRadioOption">+</button>
+                <button class="btn btn-sm btn-danger" @onclick="RemoveRadioOption">-</button>
+            </div>
+        }
+
+        <!-- Checkbox type -->
+        @if (SelectedType == "checkbox")
+        {
+            @for (int i = 0; i < CheckboxLabels.Count; i++)
+            {
+                var idx = i; // capture loop variable safely
+                <div class="input-container-check-radio" @key="idx">
+                    <input type="checkbox"
+                           checked="@CheckboxValues[idx]"
+                           @onchange="() => ToggleCheckbox(idx)" />
+                    <input type="text"
+                           class="form-control"
+                           placeholder=@($"Option {idx + 1}")
+                           value="@CheckboxLabels[idx]"
+                           @onchange="(ChangeEventArgs e) => CheckboxLabels[idx] = e.Value?.ToString() ?? string.Empty" />
+                </div>
+            }
+
+
+            <div>
+                <button class="btn btn-sm btn-success" @onclick="AddCheckboxOption">+</button>
+                <button class="btn btn-sm btn-danger" @onclick="RemoveCheckboxOption">-</button>
+            </div>
+        }
+
+        <!-- Save question -->
+        <div class="save-buttons-question mt-3">
+            <button class="btn btn-primary" @onclick="SaveQuestion">Save Question</button>
+        </div>
+
+        @if (!string.IsNullOrEmpty(SuccessMessage))
+        {
+            <div class="alert alert-success">@SuccessMessage</div>
+        }
+        @if (!string.IsNullOrEmpty(ErrorMessage))
+        {
+            <div class="alert alert-danger">@ErrorMessage</div>
+        }
+    </div>
+</div>
+
+
+@code {
+    // Question state
+    private string CurrentQuestionText { get; set; } = "";
+    private string SelectedType { get; set; } = "";
+    private bool IsRequired { get; set; } = false;
+
+    // Textbox
+    private string TextboxAnswer { get; set; } = "";
+
+    // Radiobox
+    private List<string> RadioLabels { get; set; } = new();
+    private int? SelectedRadio { get; set; }
+
+    // Checkbox
+    private List<string> CheckboxLabels { get; set; } = new();
+    private List<bool> CheckboxValues { get; set; } = new();
+
+    // Messages
+    private string SuccessMessage = "";
+    private string ErrorMessage = "";
+
+    // Output storage (local, not saved yet)
+    public List<QuestionModel> SavedQuestions { get; set; } = new();
+
+    private void SelectType(string type)
+    {
+        SelectedType = type;
+        SuccessMessage = "";
+        ErrorMessage = "";
+
+        if (type == "textbox")
+        {
+            TextboxAnswer = "";
+        }
+        else if (type == "radiobox")
+        {
+            // Initialize with 4 empty options
+            RadioLabels = new List<string> { "", "", "", "" };
+            SelectedRadio = null;
+        }
+        else if (type == "checkbox")
+        {
+            // Initialize with 4 empty options
+            CheckboxLabels = new List<string> { "", "", "", "" };
+            CheckboxValues = new List<bool> { false, false, false, false };
+        }
+
+        StateHasChanged();
+    }
+
+
+    private void AddRadioOption()
+    {
+        ErrorMessage = ""; // reset error
+        if (RadioLabels.Count >= 4)
+        {
+            ErrorMessage = "Maximum 4 radio options allowed.";
+            return;
+        }
+        RadioLabels.Add("");
+    }
+
+
+    private void RemoveRadioOption()
+    {
+        if (RadioLabels.Count > 1)
+        {
+            RadioLabels.RemoveAt(RadioLabels.Count - 1);
+            if (SelectedRadio >= RadioLabels.Count)
+                SelectedRadio = null;
+        }
+    }
+
+    private void AddCheckboxOption()
+    {
+        ErrorMessage = ""; // reset error
+        if (CheckboxLabels.Count >= 4)
+        {
+            ErrorMessage = "Maximum 4 checkbox options allowed.";
+            return;
+        }
+        CheckboxLabels.Add("");
+        CheckboxValues.Add(false);
+    }
+
+
+    private void RemoveCheckboxOption()
+    {
+        if (CheckboxLabels.Count > 1)
+        {
+            int last = CheckboxLabels.Count - 1;
+            CheckboxLabels.RemoveAt(last);
+            CheckboxValues.RemoveAt(last);
+        }
+    }
+
+    private void ToggleCheckbox(int index)
+    {
+        if (index < 0 || index >= CheckboxValues.Count) return;
+        CheckboxValues[index] = !CheckboxValues[index];
+    }
+
+
+    private void SelectRadio(int index)
+    {
+        SelectedRadio = index;
+    }
+
+    private bool ValidateQuestion()
+    {
+        // Reset previous error
+        ErrorMessage = "";
+
+        if (string.IsNullOrWhiteSpace(CurrentQuestionText))
+        {
+            ErrorMessage = "Please provide a question text.";
+            return false;
+        }
+
+        if (string.IsNullOrWhiteSpace(SelectedType))
+        {
+            ErrorMessage = "Please select a question type.";
+            return false;
+        }
+
+        if (SelectedType == "textbox" && string.IsNullOrWhiteSpace(TextboxAnswer))
+        {
+            ErrorMessage = "Textbox answer cannot be empty.";
+            return false;
+        }
+
+        if (SelectedType == "radiobox" && RadioLabels.Any(label => string.IsNullOrWhiteSpace(label)))
+        {
+            ErrorMessage = "All radio options must have text.";
+            return false;
+        }
+
+        if (SelectedType == "checkbox" && CheckboxLabels.Any(label => string.IsNullOrWhiteSpace(label)))
+        {
+            ErrorMessage = "All checkbox options must have text.";
+            return false;
+        }
+
+        // All validations passed
+        return true;
+    }
+
+
+    private void SaveQuestion()
+    {
+        if (!ValidateQuestion())
+        {
+            SuccessMessage = "";
+            return;
+        }
+
+        // Create question model
+        var question = new BlazorApp4.Models.QuestionModel
+            {
+                Id = 0,
+                FormId = 0,
+                Label = CurrentQuestionText ?? string.Empty,
+                FieldType = SelectedType ?? string.Empty,
+                Required = IsRequired,
+                ImageUrl = string.Empty,
+                Order = SavedQuestions.Count + 1,
+                Options = SelectedType switch
+                {
+                    "textbox" => new List<OptionModel>
+            {
+                new OptionModel
+                {
+                    Id = 0,
+                    FieldId = 0,
+                    OptionValue = TextboxAnswer ?? string.Empty,
+                    Order = 1,
+                    IsCorrect = false,
+                    ResponseCount = 0
+                }
+            },
+                    "radiobox" => RadioLabels.Select((label, index) => new OptionModel
+                    {
+                        Id = 0,
+                        FieldId = 0,
+                        OptionValue = label ?? string.Empty,
+                        Order = index + 1,
+                        IsCorrect = SelectedRadio == index,
+                        ResponseCount = 0
+                    }).ToList(),
+                    "checkbox" => CheckboxLabels.Select((label, index) => new OptionModel
+                    {
+                        Id = 0,
+                        FieldId = 0,
+                        OptionValue = label ?? string.Empty,
+                        Order = index + 1,
+                        IsCorrect = CheckboxValues.ElementAtOrDefault(index),
+                        ResponseCount = 0
+                    }).ToList(),
+                    _ => new List<OptionModel>()
+                },
+                RadioResponse = string.Empty,
+                CheckboxResponse = new List<string>(),
+                TextResponse = string.Empty
+            };
+
+        // Save into local list
+        SavedQuestions.Add(question);
+
+        SuccessMessage = "Question saved locally!";
+        ErrorMessage = "";
+
+        // Reset form state
+        CurrentQuestionText = "";
+        TextboxAnswer = "";
+        RadioLabels.Clear();
+        CheckboxLabels.Clear();
+        CheckboxValues.Clear();
+        SelectedType = "";
+        IsRequired = false;
+        SelectedRadio = null;
+    }
+
+
+
+
+}

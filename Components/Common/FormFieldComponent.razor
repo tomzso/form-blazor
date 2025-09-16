@@ -1,0 +1,76 @@
+﻿@using BlazorApp4.Models
+
+<div class="form-field mb-3">
+    <h3 class="form-label"><strong>@Field.Label</strong></h3>
+
+    @if (!string.IsNullOrWhiteSpace(Field.ImageUrl))
+    {
+        <div class="image-container">
+            <img src="@Field.ImageUrl" alt="Question image" style="max-width:300px;" />
+        </div>
+    }
+
+    @switch (Field.FieldType.ToLower())
+    {
+        case "radiobox":
+            <InputRadioGroup @bind-Value="Field.RadioResponse" Name="@($"field_{Field.Id}")">
+                @foreach (var option in Field.Options.OrderBy(o => o.Order))
+                {
+                    <div class="choice-row">
+                        <InputRadio Value="@option.OptionValue" disabled="@HasResponse" />
+                        <label>@option.OptionValue</label>
+                    </div>
+                }
+            </InputRadioGroup>
+            break;
+
+        case "checkbox":
+            <div>
+                @foreach (var option in Field.Options.OrderBy(o => o.Order))
+                {
+                    <div class="choice-row">
+                        <input type="checkbox"
+                               checked="@Field.CheckboxResponse.Contains(option.OptionValue)"
+                               @onchange="e => OnCheckboxChanged(option, e)"
+                               disabled="@HasResponse" />
+                        <label>@option.OptionValue</label>
+                    </div>
+                }
+            </div>
+            break;
+
+        case "textbox":
+            <InputText @bind-Value="Field.TextResponse"
+                       class="form-control"
+                       @key="Field.Id"
+                       disabled="@HasResponse" />
+            break;
+
+        default:
+            <p>Unsupported field type: @Field.FieldType</p>
+            break;
+    }
+</div>
+
+
+@code {
+    [Parameter]
+    public QuestionModel Field { get; set; } = default!;
+
+    [Parameter]
+    public bool HasResponse { get; set; }
+
+    [Parameter]
+    public bool IsUnderCreateOrEdit { get; set; }
+
+    [Parameter]
+    public EventCallback<(QuestionModel Field, string Option, bool IsChecked)> CheckboxChanged { get; set; }
+
+    private void OnCheckboxChanged(OptionModel option, ChangeEventArgs e)
+    {
+        bool isChecked = e.Value is bool b && b;
+        if (!isChecked && e.Value is string s) isChecked = s == "on";
+
+        CheckboxChanged.InvokeAsync((Field, option.OptionValue, isChecked));
+    }
+}

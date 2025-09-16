@@ -68,7 +68,7 @@ body {
         font-weight: 600;
         cursor: pointer;
         transition: all 0.3s ease;
-        width: 150px;
+        width: 200px;
     }
 
 
@@ -118,6 +118,7 @@ body {
     justify-content: center;
     margin-top: 20px; 
 }
+
 
 .auth-icon-gap {
     margin-right: 8px; 

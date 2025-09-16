@@ -5,6 +5,10 @@
 @inject NavigationManager Navigation
 @rendermode InteractiveServer
 
+<SearchBar
+    @bind-SearchUrl="url"
+    OnUrlSearch="@OnUrlSearch" />
+
 
 @if (forms == null)
 {
@@ -23,7 +27,7 @@ else
                 <p><strong>URL:</strong><a href="form/@form.Url">@form.Url</a></p>
                 <p><strong>User ID:</strong> @form.UserId</p>
                 <div class="form-actions">
-                    <button class="btn edit-btn" @onclick="() => EditForm(form.Id)"><i class="fa-solid fa-pen form-render-icon-gap"></i>Edit</button>
+                    <button class="btn edit-btn" @onclick="() => EditForm(form.Url)"><i class="fa-solid fa-pen form-render-icon-gap"></i>Edit</button>
                     <button class="btn stats-btn" @onclick="() => ViewStats(form.Url)"><i class="fa-solid fa-chart-pie form-render-icon-gap"></i>Statistics</button>
                     <button class="btn delete-btn" @onclick="() => DeleteForm(form.Id)"><i class="fa-solid fa-xmark form-render-icon-gap"></i>Delete</button>
                 </div>
@@ -34,17 +38,33 @@ else
 }
 
 @code {
+
     private List<BlazorApp4.Models.FormModel> forms;
 
     private string message = "";
+
+    private string title = "";
+    private string url = "";
+
+    private void OnUrlSearch()
+    {
+        Console.WriteLine($"Searching for URL: {url}");
+        Navigation.NavigateTo($"/form/{url}");
+    }
+
+
 
     protected override async Task OnInitializedAsync()
     {
         forms = await FormService.GetFormsAsync();
     }
-    private void EditForm(int id)
+    private void EditForm(string url)
     {
-        //NavigationManager.NavigateTo($"/forms/edit/{id}");
+        if (!string.IsNullOrEmpty(url))
+        {
+            Navigation.NavigateTo($"/form/edit/{url}");
+        }
+        StateHasChanged();
     }
 
     private void ViewStats(string url)

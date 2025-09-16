@@ -1,0 +1,74 @@
+﻿/* FORM FIELD STYLING */
+.form-field {
+    border: 1px solid #e0e0e0;
+    margin-bottom: 25px;
+    padding: 30px 50px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin-top: 50px;
+
+}
+
+    .form-field label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+        font-size: 1.1rem;
+    }
+
+    .form-field input[type="text"],
+    .form-field input[type="checkbox"],
+    .form-field input[type="radio"],
+    .form-control {
+        margin-top: 6px;
+    }
+
+/* RADIO + CHECKBOX ROWS */
+.choice-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0;
+}
+
+    .choice-row label {
+        position: relative;
+        top: 6px;
+    }
+
+/* TEXTBOX CONTROL */
+.form-control {
+    width: 100%;
+    max-width: 50px;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+}
+
+/* IMAGE PREVIEW */
+.image-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+}
+
+    .image-container img {
+        max-width: 150px;
+        max-height: 200px;
+        width: auto;
+        height: auto;
+        border-radius: 6px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+
+/* RESPONSIVE IMAGES */
+@media (min-width: 1200px) {
+    .image-container img {
+        max-width: 400px;
+        max-height: 300px;
+    }
+
+    .form-control {
+        max-width: 100%;
+    }
+}

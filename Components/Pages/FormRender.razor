@@ -1,15 +1,70 @@
-﻿@page "/form/{Url}"
+﻿@page "/form/{**Url}"
+
+@using BlazorApp4.Components.Common
 @inject BlazorApp4.Services.FormService FormService
 @rendermode InteractiveServer
 
 
-@if (form == null)
+
+
+@if (Url == "create")
 {
- 
+    <h2>Form Builder Page</h2>
+
+    <!-- Render the QuestionEditor component -->
+    <QuestionEditor @ref="questionEditor" />
+
+    <hr />
+
+@*     <!-- Show all saved questions from QuestionEditor -->
+    <h3>Saved Questions</h3>
+        @if (questionEditor == null)
+    {
+        <p>No questions added yet.</p>
+    }
+    else
+    {
+        <ul>
+                @foreach (var q in questionEditor.SavedQuestions)
+            {
+                <li>
+                    <strong>@q.Question</strong> 
+                    (@q.Type, Required: @q.Required)
+                    @if (q.Type == "radiobox" || q.Type == "checkbox")
+                    {
+                        <ul>
+                            @for (int i = 0; i < q.Options.Count; i++)
+                            {
+                                <li>
+                                    @q.Options[i] 
+                                    @if (q.Type == "radiobox" && q.SelectedRadio == i)
+                                    {
+                                        <span> (Selected) </span>
+                                    }
+                                    @if (q.Type == "checkbox" && q.SelectedCheckboxes[i])
+                                    {
+                                        <span> (Checked) </span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                </li>
+            }
+        </ul>
+    }
+
+    <!-- Save all questions button (no API yet) -->
+    <button class="btn btn-primary" @onclick="SaveForm">Save Form (API not implemented yet)</button> *@
+
 }
-else
+else if (IsUnderCreateOrEdit)
 {
-    <div class="form-container">
+    <h1>editing...</h1>
+}
+else if (form != null)
+{
+     <div class="form-container">
         <div class=form-head>
             <div class="form-title">@form.Title</div>
             <div class="form-description">@form.Description</div>
@@ -22,75 +77,22 @@ else
 
             @foreach (var field in form.FormFields.OrderBy(f => f.Order))
             {
-                <div class="form-field mb-3">
-                    <h3 class="form-label"><strong>@field.Label</strong></h3>
-
-                    @if (!string.IsNullOrWhiteSpace(field.ImageUrl))
-                    {
-                        <div class="image-container">
-                            <img src="@field.ImageUrl" alt="Question image" style="max-width:300px;" />
-                        </div>
-                    }
-
-                    @switch (field.FieldType.ToLower())
-                    {
-                        // RADIO BUTTONS
-                        case "radiobox":
-                            <InputRadioGroup @bind-Value="field.RadioResponse" Name="@($"field_{field.Id}")">
-                                @foreach (var option in field.Options.OrderBy(o => o.Order))
-                                {
-                                    <div class="choice-row">
-                                        <InputRadio Value="@option.OptionValue" disabled="@HasResponse(field)" />
-                                        <label>@option.OptionValue</label>
-                                    </div>
-                                }
-                            </InputRadioGroup>
-                            break;
-
-                        // CHECKBOXES
-                        case "checkbox":
-                            <div>
-                                @foreach (var option in field.Options.OrderBy(o => o.Order))
-                                {
-                                    <div class="choice-row">
-                                        <input type="checkbox"
-                                               checked="@field.CheckboxResponse.Contains(option.OptionValue)"
-                                               @onchange="e => OnCheckboxChanged(field, option, e)"
-                                               disabled="@HasResponse(field)" />
-                                        <label>@option.OptionValue</label>
-                                    </div>
-                                }
-                            </div>
-                            break;
-
-
-                        // TEXTBOX
-                        case "textbox":
-                            <div>
-                                <InputText @bind-Value="field.TextResponse"
-                                           class="form-control"
-                                           @key="field.Id"
-                                           disabled="@HasResponse(field)" />
-                                
-                            </div>
-                            break;
-
-                        default:
-                            <p>Unsupported field type: @field.FieldType</p>
-                            break;
-                    }
-                </div>
+                <FormFieldComponent Field="field"
+                                    HasResponse="@HasResponse(field)"
+                                    IsUnderCreateOrEdit=@IsUnderCreateOrEdit
+                                    CheckboxChanged="OnCheckboxChanged" />
             }
+
 
             <div class="button-container">
                 <button class="btn" disabled="@IsFormAnswered">Submit</button>
             </div>
-
         </EditForm>
+
     </div>
+
 }
 
-<h3>@message</h3>
 
 @code {
     [Parameter]
@@ -100,14 +102,31 @@ else
 
     private bool IsFormAnswered = false;
 
+    private bool IsUnderCreateOrEdit = false;
+
     public string message { get; set; } = "";
+
+    private QuestionEditor questionEditor;
 
 
 
     protected override async Task OnInitializedAsync()
     {
-        // Load the form by URL
-        form = await FormService.GetFormByUrlAsync(Url);
+        // Check if URL contains /form/edit/
+        IsUnderCreateOrEdit = Url.StartsWith("edit/");
+
+        if (IsUnderCreateOrEdit)
+        {
+            // Remove "edit/" from the start of Url
+            Url = Url.Substring("edit/".Length);
+        }
+
+        if(Url != "create")
+        {
+            // Load the form by URL
+            form = await FormService.GetFormByUrlAsync(Url);
+        }
+
         try
         {
             if (form == null)
@@ -153,27 +172,29 @@ else
         }
     }
 
-
-
-    private void OnCheckboxChanged(BlazorApp4.Models.FormFieldModel field, BlazorApp4.Models.FormFieldOptionModel option, ChangeEventArgs e)
+    private void SaveForm()
     {
-        bool isChecked = e.Value is bool b && b;
+        // // Currently just prints questions to console
+        // foreach (var q in questionEditor.SavedQuestions)
+        // {
+        //     Console.WriteLine($"Question: {q.Question}, Type: {q.Type}");
+        // }
 
-        // Some browsers may return "on" instead of true/false
-        if (!isChecked && e.Value is string s)
-        {
-            isChecked = s == "on";
-        }
-
-        if (isChecked && !field.CheckboxResponse.Contains(option.OptionValue))
-        {
-            field.CheckboxResponse.Add(option.OptionValue);
-        }
-        else if (!isChecked && field.CheckboxResponse.Contains(option.OptionValue))
-        {
-            field.CheckboxResponse.Remove(option.OptionValue);
-        }
+        // // TODO: Add your API call here to save all questions
+        // Console.WriteLine("Save form API not implemented yet.");
     }
+
+
+
+    private void OnCheckboxChanged((BlazorApp4.Models.QuestionModel Field, string Option, bool IsChecked) data)
+    {
+        var field = data.Field;
+        if (data.IsChecked && !field.CheckboxResponse.Contains(data.Option))
+            field.CheckboxResponse.Add(data.Option);
+        else if (!data.IsChecked && field.CheckboxResponse.Contains(data.Option))
+            field.CheckboxResponse.Remove(data.Option);
+    }
+
 
 
     private async Task HandleSubmit()
@@ -216,7 +237,7 @@ else
             }
         }
     }
-    private bool HasResponse(BlazorApp4.Models.FormFieldModel field)
+    private bool HasResponse(BlazorApp4.Models.QuestionModel field)
     {
         switch (field.FieldType.ToLower())
         {

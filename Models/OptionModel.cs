@@ -1,6 +1,6 @@
 ﻿namespace BlazorApp4.Models
 {
-    public class FormFieldOptionModel
+    public class OptionModel
     {
         public int Id { get; set; }
         public int FieldId { get; set; }

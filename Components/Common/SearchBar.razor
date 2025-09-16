@@ -1,0 +1,33 @@
+﻿<div class="full-width-container">
+    <!-- URL Search -->
+    <div class="search-url-bar">
+        <input type="search"
+               placeholder="Search form by URL"
+               value="@SearchUrl"
+               @oninput="(e) => SearchUrlChanged.InvokeAsync(((ChangeEventArgs)e).Value?.ToString())"
+               @onkeydown="HandleKeyDown"
+               class="search-input" />
+
+        <button class="search-url-button" @onclick="() => OnUrlSearch.InvokeAsync()">
+            <i class="fa-solid fa-magnifying-glass"></i>
+        </button>
+    </div>
+
+</div>
+
+
+@code {
+
+    [Parameter] public string SearchUrl { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SearchUrlChanged { get; set; }
+
+    [Parameter] public EventCallback OnUrlSearch { get; set; }
+
+    private async Task HandleKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await OnUrlSearch.InvokeAsync();
+        }
+    }
+}

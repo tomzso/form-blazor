@@ -13,7 +13,7 @@ namespace BlazorApp4.Models
         public string Url { get; set; }
         public Guid UserId { get; set; }
 
-        public List<FormFieldModel> FormFields { get; set; } = new();
+        public List<QuestionModel> FormFields { get; set; } = new();
     }
 
 }

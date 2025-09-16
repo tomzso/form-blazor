@@ -38,7 +38,7 @@ else
         form = await FormService.GetFormByUrlAsync(Url);
     }
 
-    private BarConfig GetBarConfig(BlazorApp4.Models.FormFieldModel field)
+    private BarConfig GetBarConfig(BlazorApp4.Models.QuestionModel field)
     {
         var config = new BarConfig
             {

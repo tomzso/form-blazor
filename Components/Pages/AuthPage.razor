@@ -20,7 +20,7 @@
 
             <br />
             <div class="button-group">
-                <button class="register-active" @onclick="SwitchToRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right auth-icon-gap"></i>Sign Up</button>
+                <button class="register-active" @onclick="SwitchToRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right auth-icon-gap"></i>Register</button>
                 <button @onclick="DoLogin" disabled="@isButtonDisabled"><i class="fa-solid fa-chevron-right auth-icon-gap"></i>Next</button>
             </div>
         }
@@ -39,8 +39,8 @@
 
             <br />
             <div class="button-group">
-                <button class="login-active" @onclick="SwitchToLogin" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right-to-bracket auth-icon-gap"></i>Login</button>
-                <button @onclick="DoRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-chevron-right auth-icon-gap"></i>Next</button>
+                <button class="login-active auth-btn" @onclick="SwitchToLogin" disabled="@isButtonDisabled"><i class="fa-solid fa-arrow-right-to-bracket auth-icon-gap"></i>Login</button>
+                <button class="auth-btn"  @onclick="DoRegister" disabled="@isButtonDisabled"><i class="fa-solid fa-chevron-right auth-icon-gap"></i>Next</button>
             </div>
         }
     </div>
